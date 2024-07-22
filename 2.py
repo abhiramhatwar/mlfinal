@@ -1,171 +1,3 @@
-a) A*
-
-Method1:
-using dequeue(preferable)
-
-from collections import deque
-
-def a_star_search_deque(graph, start, goal, heuristic, cost):
-    # Queue for exploring nodes
-    queue = deque([(start, 0 + heuristic[start])])
-    visited = set()
-    g_cost = {start: 0}
-    parent = {start: None}
-
-    while queue:
-        # Sort queue based on f-cost to simulate priority queue
-        queue = deque(sorted(list(queue), key=lambda x: x[1]))
-        current_node, current_f_cost = queue.popleft()
-
-        if current_node in visited:
-            continue
-
-        visited.add(current_node)
-
-        if current_node == goal:
-            break
-
-        for neighbor in graph[current_node]:
-            new_cost = g_cost[current_node] + cost[(current_node, neighbor)]
-            if neighbor not in g_cost or new_cost < g_cost[neighbor]:
-                g_cost[neighbor] = new_cost
-                f_cost = new_cost + heuristic[neighbor]
-                queue.append((neighbor, f_cost))
-                parent[neighbor] = current_node
-
-    path = []
-    node = goal
-    total_cost = g_cost.get(goal, 0)
-    while node is not None:
-        path.append(node)
-        node = parent[node]
-    path.reverse()
-
-    return path, total_cost
-
-# Example graph
-graph = {
-    'A': ['B', 'C'],
-    'B': ['D', 'E'],
-    'C': ['F', 'G'],
-    'D': [],
-    'E': [],
-    'F': [],
-    'G': []
-}
-
-# Example heuristic values
-heuristic = {
-    'A': 6,
-    'B': 4,
-    'C': 4,
-    'D': 0,
-    'E': 2,
-    'F': 3,
-    'G': 1
-}
-
-# Example costs between nodes
-cost = {
-    ('A', 'B'): 1,
-    ('A', 'C'): 1,
-    ('B', 'D'): 1,
-    ('B', 'E'): 3,
-    ('C', 'F'): 5,
-    ('C', 'G'): 2
-}
-
-start = 'A'
-goal = 'D'
-
-path, total_cost = a_star_search_deque(graph, start, goal, heuristic, cost)
-print("A* Search Path:", path)
-print("Total Cost:", total_cost)
-
-Method 2: Using heapq
-
-
-import heapq
-
-def a_star_search_heapq(graph, start, goal, heuristic, cost):
-    # Priority queue for exploring nodes
-    priority_queue = []
-    heapq.heappush(priority_queue, (0 + heuristic[start], start))
-    visited = set()
-    g_cost = {start: 0}
-    parent = {start: None}
-
-    while priority_queue:
-        current_f_cost, current_node = heapq.heappop(priority_queue)
-
-        if current_node in visited:
-            continue
-
-        visited.add(current_node)
-
-        if current_node == goal:
-            break
-
-        for neighbor in graph[current_node]:
-            new_cost = g_cost[current_node] + cost[(current_node, neighbor)]
-            if neighbor not in g_cost or new_cost < g_cost[neighbor]:
-                g_cost[neighbor] = new_cost
-                f_cost = new_cost + heuristic[neighbor]
-                heapq.heappush(priority_queue, (f_cost, neighbor))
-                parent[neighbor] = current_node
-
-    path = []
-    node = goal
-    total_cost = g_cost.get(goal, 0)
-    while node is not None:
-        path.append(node)
-        node = parent[node]
-    path.reverse()
-
-    return path, total_cost
-
-# Example graph
-graph = {
-    'A': ['B', 'C'],
-    'B': ['D', 'E'],
-    'C': ['F', 'G'],
-    'D': [],
-    'E': [],
-    'F': [],
-    'G': []
-}
-
-# Example heuristic values
-heuristic = {
-    'A': 6,
-    'B': 4,
-    'C': 4,
-    'D': 0,
-    'E': 2,
-    'F': 3,
-    'G': 1
-}
-
-# Example costs between nodes
-cost = {
-    ('A', 'B'): 1,
-    ('A', 'C'): 1,
-    ('B', 'D'): 1,
-    ('B', 'E'): 3,
-    ('C', 'F'): 5,
-    ('C', 'G'): 2
-}
-
-start = 'A'
-goal = 'D'
-
-path, total_cost = a_star_search_heapq(graph, start, goal, heuristic, cost)
-print("A* Search Path:", path)
-print("Total Cost:", total_cost)
-
-b)Contour Plot
-
-# Using Toyota dataset
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -181,3 +13,71 @@ plt.xlabel('KM')
 plt.ylabel('Weight')
 plt.title('Contour Plot')
 plt.show()
+
+
+from queue import PriorityQueue
+
+def astar(graph, start, goal, heuristic):
+    visited = set()
+    pq = PriorityQueue()
+    pq.put((0 + heuristic[start], start))
+    parent = {start: None}
+    path_cost = {start: 0}
+    
+    while not pq.empty():
+        current_cost, node = pq.get()
+        
+        if node == goal:
+            break
+        
+        if node not in visited:
+            visited.add(node)
+            for neighbor, edge_cost in graph[node].items():
+                new_cost = path_cost[node] + edge_cost
+                if neighbor not in path_cost or new_cost < path_cost[neighbor]:
+                    path_cost[neighbor] = new_cost
+                    total_cost = new_cost + heuristic[neighbor]
+                    pq.put((total_cost, neighbor))
+                    parent[neighbor] = node
+    if goal not in parent:
+        return [], 0
+    path = []
+    node = goal
+    total_cost = 0
+    while node is not None:
+        path.append(node)
+        if parent[node] is not None:
+            total_cost += graph[parent[node]][node]
+        node = parent[node]
+    path.reverse()
+    
+    return path, total_cost
+
+graph = {
+    'A': {'B': 2, 'E': 3},
+    'B': {'C': 1, 'G': 9},
+    'E': {'D': 6},
+    'D': {'G': 1},
+    'C': {},
+    'G': {}  
+}
+
+start_node = 'A'
+goal_node = 'G'
+
+heuristic_values = {
+    'A': 11,
+    'B': 6,
+    'C': 99,
+    'E': 7,
+    'D': 1,
+    'G': 0
+}
+
+path, total_cost = astar(graph, start_node, goal_node, heuristic_values)
+if not path:
+    print("No Path Found!")
+else:
+    print("Best First Search Path:", path)
+    print("Total Cost:", total_cost)
+    print("Number of Nodes Visited:", len(path))
